@@ -18,30 +18,13 @@ main:
 		mov qword [rsp], rcx 
 		pop qword [rbp + 0] 
 		sub rsp, 8 
-		mov rcx, 0x4008000000000000 
+		mov rcx, 0x4014000000000000 
 		mov qword [rsp], rcx 
 		pop qword [rbp + 8] 
 		sub rsp, 8 
-		mov rcx, 0x4000000000000000 
+		mov rcx, 0x4018000000000000 
 		mov qword [rsp], rcx 
 		pop qword [rbp + 16] 
-		sub rsp, 8 
-		mov rcx, 0x4022000000000000 
-		mov qword [rsp], rcx 
-		pop qword [rbp + 24] 
-		sub rsp, 8 
-		mov rcx, 0x0 
-		mov qword [rsp], rcx 
-		pop qword [rbp + 32] 
-		push qword [rbp + 24] 
-		movsd xmm1, qword [rsp] 
-		sqrtsd xmm0, xmm1 
-		movsd qword [rsp], xmm0 
-		pop qword [rbp + 32] 
-		push rsi 
-		push qword [rbp + 32] 
-		call out 
-		pop rsi 
 		sub rsp, 8 
 		mov rcx, 0x0 
 		mov qword [rsp], rcx 
@@ -59,12 +42,12 @@ main:
 		sub rbp, 50 
 		pop rsi 
 		push rax 
-		pop qword [rbp + 40] 
+		pop qword [rbp + 24] 
 		push rsi 
-		push qword [rbp + 40] 
+		push qword [rbp + 24] 
 		call out 
 		pop rsi 
-		push qword [rbp + 40] 
+		push qword [rbp + 24] 
 		sub rsp, 8 
 		mov rcx, 0x4020000000000000 
 		mov qword [rsp], rcx 
@@ -79,20 +62,20 @@ main:
 		push rsi 
 		ret 
 L_0: 
-		push qword [rbp + 40] 
+		push qword [rbp + 24] 
 		sub rsp, 8 
 		mov rcx, 0x0 
 		mov qword [rsp], rcx 
 		pop rcx 
 		pop rdx 
 		cmp rcx, rdx 
-		je L_1 
+		je L_1  
 		push rsi 
 		push qword [rbx + 0] 
 		call out 
 		pop rsi 
 L_1: 
-		push qword [rbp + 40] 
+		push qword [rbp + 24] 
 		sub rsp, 8 
 		mov rcx, 0x4000000000000000 
 		mov qword [rsp], rcx 
@@ -173,7 +156,7 @@ L_3:
 		pop rcx 
 		pop rdx 
 		cmp rcx, rdx 
-		jbe L_4 
+		jle L_4 
 		sub rsp, 8 
 		mov rcx, 0x0 
 		mov qword [rsp], rcx 

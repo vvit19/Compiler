@@ -14,7 +14,7 @@ _start:
 main: 
 		pop rsi 
 		sub rsp, 8 
-		mov rcx, 0x401c000000000000 
+		mov rcx, 0x4014000000000000 
 		mov qword [rsp], rcx 
 		pop qword [rbp + 0] 
 		push rsi 

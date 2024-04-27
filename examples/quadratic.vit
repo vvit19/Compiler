@@ -1,13 +1,8 @@
 func main ()
 {
     var a = 1;
-    var b = 3;
-    var c = 2;
-
-    var swag = 9;
-    var aboba = 0;
-    aboba = sqrt (swag);
-    out (aboba);
+    var b = 5;
+    var c = 6;
 
     gl_var x_1 = 0;
     gl_var x_2 = 0;

@@ -135,7 +135,7 @@ Str:
 Dec:
         push rsi
 
-        mov rcx, 10             ; base
+        mov ecx, 10             ; base
         mov rsi, buffer
         mov rax, [rbp]          ; number
         add rbp, 8
@@ -251,22 +251,22 @@ ClearBuffer:
 ; Destr:    RSI, BH, RAX, EDX
 Itoa10:
         xor ch, ch          ; BH = SF
-        mov rdx, rax
-        test rdx, rdx
+        mov edx, eax
+        test edx, edx
         jns .While
-        neg rax
+        neg eax
         mov bh, 1
         inc rsi
 
 .While:
-        xor rdx, rdx
-        div rcx
+        xor edx, edx
+        div ecx
 
-        mov dh, [digits_table + rdx]
+        mov dh, [digits_table + edx]
         mov [rsi], dh
         inc rsi
 
-        cmp rax, 0
+        cmp eax, 0
         jne .While
 
         cmp bh, 1

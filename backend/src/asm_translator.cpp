@@ -50,11 +50,11 @@ void TranslateToAsm (List* ir_array, const char* filename)
             case Commands::IN:    PrintCommand  (asm_file, "call in \n");                              break;
             case Commands::OUT:   PrintCommand  (asm_file, "call out \n");                             break;
             case Commands::JUMP:  PrintCommand  (asm_file, "jmp L_%lld \n",  (long long) cur_ir->imm); break;
-            case Commands::JA:    PrintCommand  (asm_file, "ja L_%lld \n",   (long long) cur_ir->imm); break;
-            case Commands::JAE:   PrintCommand  (asm_file, "jae L_%lld \n",  (long long) cur_ir->imm); break;
-            case Commands::JB:    PrintCommand  (asm_file, "jb L_%lld \n",   (long long) cur_ir->imm); break;
-            case Commands::JBE:   PrintCommand  (asm_file, "jbe L_%lld \n",  (long long) cur_ir->imm); break;
-            case Commands::JE:    PrintCommand  (asm_file, "je L_%lld \n",   (long long) cur_ir->imm); break;
+            case Commands::JA:    PrintCommand  (asm_file, "jg L_%lld  \n",  (long long) cur_ir->imm); break;
+            case Commands::JAE:   PrintCommand  (asm_file, "jge L_%lld \n",  (long long) cur_ir->imm); break;
+            case Commands::JB:    PrintCommand  (asm_file, "jl L_%lld  \n",  (long long) cur_ir->imm); break;
+            case Commands::JBE:   PrintCommand  (asm_file, "jle L_%lld \n",  (long long) cur_ir->imm); break;
+            case Commands::JE:    PrintCommand  (asm_file, "je L_%lld  \n",  (long long) cur_ir->imm); break;
             case Commands::JNE:   PrintCommand  (asm_file, "jne L_%lld \n",  (long long) cur_ir->imm); break;
             case Commands::SQRT:  HandleSqrt    (asm_file, cur_ir);                                    break;
 
