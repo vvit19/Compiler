@@ -10,6 +10,7 @@ static void HandlePush   (FILE* file, Ir* ir);
 static void HandlePop    (FILE* file, Ir* ir);
 static void HandleMath   (FILE* file, Ir* ir);
 static void HandleCall   (FILE* file, Ir* ir);
+static void HandleSqrt   (FILE* file, Ir* ir);
 static void BeginAsmCode (FILE* file);
 
 void TranslateToAsm (List* ir_array, const char* filename)
@@ -32,7 +33,6 @@ void TranslateToAsm (List* ir_array, const char* filename)
             case Commands::POP:   HandlePop     (asm_file, cur_ir);                                    break;
             case Commands::RET:   PrintCommand  (asm_file, "ret \n");                                  break;
             case Commands::CALL:  HandleCall    (asm_file, cur_ir);                                    break;
-
             case Commands::ADD:
             case Commands::SUB:
             case Commands::MUL:
@@ -56,6 +56,7 @@ void TranslateToAsm (List* ir_array, const char* filename)
             case Commands::JBE:   PrintCommand  (asm_file, "jbe L_%lld \n",  (long long) cur_ir->imm); break;
             case Commands::JE:    PrintCommand  (asm_file, "je L_%lld \n",   (long long) cur_ir->imm); break;
             case Commands::JNE:   PrintCommand  (asm_file, "jne L_%lld \n",  (long long) cur_ir->imm); break;
+            case Commands::SQRT:  HandleSqrt    (asm_file, cur_ir);                                    break;
 
             default:              NO_PROPER_CASE_FOUND;
         }
@@ -85,7 +86,7 @@ static void HandleMath (FILE* file, Ir* ir)
         default: NO_PROPER_CASE_FOUND;
     }
 
-    PrintCommand(file, "movsd qword [rsp], xmm1 \n");
+    PrintCommand(file, "movsd qword [rsp], xmm0 \n");
 }
 
 static void HandlePush (FILE* file, Ir* ir)
@@ -137,17 +138,25 @@ static void HandleCall (FILE* file, Ir* ir)
     PrintCommand (file, "sub rbp, %d \n", MAX_VARS);
 }
 
+static void HandleSqrt (FILE* file, Ir* ir)
+{
+    PrintCommand (file, "movsd xmm1, qword [rsp] \n");
+    PrintCommand (file, "sqrtsd xmm0, xmm1 \n");
+    PrintCommand (file, "movsd qword [rsp], xmm0 \n");
+}
+
 static void BeginAsmCode (FILE* file)
 {
     assert (file);
 
     fprintf (file,
+             "%%include \"stdlib.s\" \n"
              "global _start \n"
              "section .data \n"
-             "buffer: times %d dq 0 \n"
+             "variables: times %d dq 0 \n"
              "section .text \n"
              "_start: \n"
-             "\t\tmov rbx, buffer \n"
+             "\t\tmov rbx, variables \n"
              "\t\tmov rbp, rbx \n"
              "\t\tadd rbp, %d \n"
              "\t\tcall main \n"

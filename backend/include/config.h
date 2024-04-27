@@ -30,7 +30,8 @@ enum class Commands
     JAE,
     JBE,
     JA,
-    JB
+    JB,
+    SQRT
 };
 
 enum Registers

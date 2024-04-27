@@ -1,15 +1,16 @@
 func main ()
 {
-    var a = 0;
-    var b = 0;
-    var c = 0;
+    var a = 1;
+    var b = 3;
+    var c = 2;
+
+    var swag = 9;
+    var aboba = 0;
+    aboba = sqrt (swag);
+    out (aboba);
 
     gl_var x_1 = 0;
     gl_var x_2 = 0;
-
-    in (a);
-    in (b);
-    in (c);
 
     var n_roots = call solve_quadratic (a, b, c);
 
@@ -80,4 +81,6 @@ func solve_linear (a, b)
 
         return 1;
     }
+
+    return -1;
 }

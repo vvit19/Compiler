@@ -1,9 +1,10 @@
+%include "stdlib.s" 
 global _start 
 section .data 
-buffer: times 2500 dq 0 
+variables: times 2500 dq 0 
 section .text 
 _start: 
-		mov rbx, buffer 
+		mov rbx, variables 
 		mov rbp, rbx 
 		add rbp, 50 
 		call main 
@@ -13,7 +14,7 @@ _start:
 main: 
 		pop rsi 
 		sub rsp, 8 
-		mov rcx, 0x4014000000000000 
+		mov rcx, 0x401c000000000000 
 		mov qword [rsp], rcx 
 		pop qword [rbp + 0] 
 		push rsi 
@@ -24,8 +25,10 @@ main:
 		pop rsi 
 		push rax 
 		pop qword [rbp + 8] 
+		push rsi 
 		push qword [rbp + 8] 
 		call out 
+		pop rsi 
 		sub rsp, 8 
 		mov rcx, 0x0 
 		mov qword [rsp], rcx 
@@ -58,10 +61,8 @@ L_0:
 		movsd xmm0, qword [rsp + 8] 
 		movsd xmm1, qword [rsp] 
 		pop rcx
-		pop rcx
 		subsd xmm0, xmm1 
-		sub rsp, 8 
-		movsd qword [rsp], xmm1 
+		movsd qword [rsp], xmm0 
 		add rbp, 50 
 		call factorial 
 		sub rbp, 50 
@@ -73,10 +74,8 @@ L_0:
 		movsd xmm0, qword [rsp + 8] 
 		movsd xmm1, qword [rsp] 
 		pop rcx
-		pop rcx
 		mulsd xmm0, xmm1 
-		sub rsp, 8 
-		movsd qword [rsp], xmm1 
+		movsd qword [rsp], xmm0 
 		pop rax 
 		push rsi 
 		ret 

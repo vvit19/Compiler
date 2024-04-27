@@ -12,4 +12,5 @@ backend/compile_commands.json
 middleend/.cache
 middleend/middle
 frontend/front
-src/dump.dot
+frontend/dump.dot
+examples/main

@@ -27,8 +27,10 @@ static void  PushOut        (List* ir_list, Node* node, AsmInfo* info);
 static void  PushIf         (List* ir_list, Node* node, AsmInfo* info);
 static void  PushElse       (List* ir_list, Node* node, AsmInfo* info);
 static void  PushEq         (List* ir_list, Node* node, AsmInfo* info);
+static void  PushWhile      (List* ir_list, Node* node, AsmInfo* info);
 static void  PushParams     (List* ir_list, Node* node, AsmInfo* info);
 static void  PushParam      (List* ir_list, Node* node, AsmInfo* info);
+static void  PushSqrt       (List* ir_list, Node* node, AsmInfo* info);
 static void  PushCondJump   (List* ir_list, Commands jump, Node* node, AsmInfo* info);
 static void  PushMathOp     (List* ir_list, Commands op,   Node* node, AsmInfo* info);
 static void  PushOp         (List* ir_list, Node* node, AsmInfo* info);
@@ -90,20 +92,20 @@ static void PushOp (List* ir_list, Node* node, AsmInfo* info)
         case IF:               PushIf       (ir_list, node, info); break;
         case ELSE:             PushElse     (ir_list, node, info); break;
         case EQ:               PushEq       (ir_list, node, info); break;
+        case WHILE:            PushWhile    (ir_list, node, info); break;
+        case SQRT:             PushSqrt     (ir_list, node, info); break;
         case ISEQ:             PushCondJump (ir_list, Commands::JNE, node, info); break;
         case NEQ:              PushCondJump (ir_list, Commands::JE,  node, info); break;
-        case BIGGER:           PushCondJump (ir_list, Commands::JBE,  node, info); break;
-        case SMALLER:          PushCondJump (ir_list, Commands::JAE,  node, info); break;
-        case BIGEQ:            PushCondJump (ir_list, Commands::JB, node, info); break;
-        case SMALLEQ:          PushCondJump (ir_list, Commands::JA, node, info); break;
+        case BIGGER:           PushCondJump (ir_list, Commands::JAE,  node, info); break;
+        case SMALLER:          PushCondJump (ir_list, Commands::JBE,  node, info); break;
+        case BIGEQ:            PushCondJump (ir_list, Commands::JA, node, info); break;
+        case SMALLEQ:          PushCondJump (ir_list, Commands::JB, node, info); break;
         case ADD:              PushMathOp   (ir_list, Commands::ADD, node, info); break;
         case SUB:              PushMathOp   (ir_list, Commands::SUB, node, info); break;
         case MULT:             PushMathOp   (ir_list, Commands::MUL, node, info); break;
         case DIV:              PushMathOp   (ir_list, Commands::DIV, node, info); break;
         // case SIN:              PushMathOp   (ir_list, Commands::ADD, node, info); break;
         // case COS:              PushMathOp   (ir_list, Commands::ADD, node, info); break;
-        // case SQRT:             PushMathOp   (ir_list, Commands::ADD, node, info); break;
-        // case WHILE:            PushMathOp   (ir_list, Commands::ADD, node, info); break;
         default:               NO_PROPER_CASE_FOUND;
     }
 }
@@ -159,7 +161,7 @@ static void PushElse (List* ir_list, Node* node, AsmInfo* info)
 
     Ir* ir = NewIr ({Commands::JUMP, IMM_NEED, NO, NO, (elem_t) info->label_num, nullptr});
     INSERT;
-    int after_label = info->label_num;
+    int after_label = info->label_num++;
 
     ir = NewIr ({Commands::LABEL, IMM_NEED, NO, NO, (elem_t) else_label, nullptr});
     INSERT;
@@ -179,7 +181,11 @@ static void PushParam (List* ir_list, Node* node, AsmInfo* info)
     switch (info->prev_option)
     {
         case IN:
+            ir = NewIr ({Commands::PUSH, REG_NEED, RSI, NO, 0, nullptr});
+            INSERT;
             ir = NewIr ({Commands::IN, NO_ARGS, NO, NO, 0, nullptr});
+            INSERT;
+            ir = NewIr ({Commands::POP, REG_NEED, RSI, NO, 0, nullptr});
             INSERT;
             ir = NewIr ({Commands::PUSH, REG_NEED, RAX, NO, 0, nullptr});
             INSERT;
@@ -187,6 +193,9 @@ static void PushParam (List* ir_list, Node* node, AsmInfo* info)
             break;
 
         case OUT:
+            ir = NewIr ({Commands::PUSH, REG_NEED, RSI, NO, 0, nullptr});
+            INSERT;
+
             if (node->left->type == NUM_T)
             {
                 ir = NewIr ({Commands::PUSH, IMM_NEED, NO, NO, node->left->value.num, nullptr});
@@ -199,6 +208,10 @@ static void PushParam (List* ir_list, Node* node, AsmInfo* info)
 
             ir = NewIr ({Commands::OUT, NO_ARGS, NO, NO, 0, nullptr});
             INSERT;
+
+            ir = NewIr ({Commands::POP, REG_NEED, RSI, NO, 0, nullptr});
+            INSERT;
+
             break;
 
         case FUNC:
@@ -243,7 +256,7 @@ static void PushIn (List* ir_list, Node* node, AsmInfo* info)
     LEFT_CHILD_TO_IR;
 }
 
-static void  PushOut (List* ir_list, Node* node, AsmInfo* info)
+static void PushOut (List* ir_list, Node* node, AsmInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -267,6 +280,42 @@ static void PushCondJump (List* ir_list, Commands jump, Node* node, AsmInfo* inf
     INSERT;
 
     ir = NewIr ({jump, IMM_NEED, NO, NO, (elem_t) info->label_num, nullptr});
+    INSERT;
+}
+
+static void PushWhile (List* ir_list, Node* node, AsmInfo* info)
+{
+    ASSERT_BASE_PARAMS;
+
+    LEFT_CHILD_TO_IR;
+
+    int end_label   = info->label_num++;
+    int while_label = info->label_num;
+
+    Ir* ir = NewIr ({Commands::LABEL, IMM_NEED, NO, NO, (elem_t) while_label, nullptr});
+    INSERT;
+
+    RIGHT_CHILD_TO_IR;
+
+    int temp_label = info->label_num;
+    info->label_num = end_label;
+    LEFT_CHILD_TO_IR;
+    info->label_num = temp_label;
+
+    ir = NewIr ({Commands::JUMP, IMM_NEED, NO, NO, (elem_t) while_label, nullptr});
+    INSERT;
+
+    ir = NewIr ({Commands::LABEL, IMM_NEED, NO, NO, (elem_t) end_label, nullptr});
+    INSERT;
+}
+
+static void PushSqrt (List* ir_list, Node* node, AsmInfo* info)
+{
+    ASSERT_BASE_PARAMS;
+
+    RIGHT_CHILD_TO_IR;
+
+    Ir* ir = NewIr ({Commands::SQRT, NO_ARGS, NO, NO, 0, nullptr});
     INSERT;
 }
 

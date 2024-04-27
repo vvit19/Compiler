@@ -1,7 +1,6 @@
 func main ()
 {
-    var n = 0;
-    in (n);
+    var n = 6;
 
     var res = call fib (n);
     out (res);
