@@ -1,0 +1,15 @@
+compile_commands.json
+middleend/obj
+frontend/obj
+examples/*.asm
+examples/*.o
+common/obj
+.cache
+backend/obj
+backend/.cache
+backend/back
+backend/compile_commands.json
+middleend/.cache
+middleend/middle
+frontend/front
+src/dump.dot
