@@ -26,8 +26,6 @@ char* GetFileContent(const char* filename)
 
     int file_size = GetFileSize(file);
 
-    printf (file_size);
-
     char* buffer = (char*) calloc(file_size + 1, sizeof(char));
     assert(buffer);
 

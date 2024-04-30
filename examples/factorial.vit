@@ -1,8 +1,11 @@
 func main ()
 {
-    var n = 5;
+    var n = 0;
+    in (n);
 
     var res = call factorial (n);
+
+    out (res);
 
     return 0;
 }
