@@ -19,6 +19,13 @@ enum ExitCodes
     ERR
 };
 
+enum class Translation
+{
+    ASM,
+    ELF,
+    ERR,
+};
+
 #define NO_PROPER_CASE_FOUND \
     fprintf (stderr, "Default case reached in file: %s, function: %s, line: %d\n", \
                           __FILE__, __PRETTY_FUNCTION__, __LINE__)
@@ -36,6 +43,8 @@ bool   IsEqual        (double a, double b);
 int    SkipSpaces     (char* buffer, int i);
 int    Factorial      (int n);
 bool   IsInt          (double n);
-int    PrintCommand (FILE* file, const char* command, ...);
+int    PrintCommand   (FILE* file, const char* command, ...);
+
+Translation HandleCommandLineArgs (int args_num, const char** arguments);
 
 #endif

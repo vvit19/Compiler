@@ -2,9 +2,8 @@
 #include "config.h"
 #include "utils.h"
 #include <cassert>
+#include <cstdint>
 #include <cstdio>
-
-const int MAX_FUNCS = 50;
 
 static void HandlePush   (FILE* file, Ir* ir);
 static void HandlePop    (FILE* file, Ir* ir);
@@ -38,7 +37,7 @@ void TranslateToAsm (List* ir_array, const char* filename)
             case Commands::MUL:
             case Commands::DIV:   HandleMath    (asm_file, cur_ir);                                    break;
             case Commands::LABEL: fprintf       (asm_file, "L_%lld: \n", (long long) cur_ir->imm);     break;
-            case Commands::FUNC:  fprintf (asm_file, "%s: \n", cur_ir->label_name);                    break;
+            case Commands::FUNC:  fprintf       (asm_file, "%s: \n", cur_ir->func_name);               break;
             case Commands::MOV:   PrintCommand  (asm_file, "mov %s, %s \n",
                                                 registers_strings[cur_ir->reg1],
                                                 registers_strings[cur_ir->reg2]);                      break;
@@ -96,11 +95,11 @@ static void HandlePush (FILE* file, Ir* ir)
 
     if (ir->imm_need && ir->mem_need && ir->reg_need)
     {
-        PrintCommand(file, "push qword [%s + %lld] \n", registers_strings[ir->reg1], (long long) ir->imm * ELEM_SIZE);
+        PrintCommand (file, "push qword [%s + %llu] \n", registers_strings[ir->reg1], (uint64_t) ir->imm * ELEM_SIZE);
     }
     else if (ir->imm_need && !ir->mem_need && !ir->reg_need)
     {
-        long long num = {};
+        long long num = 0;
         memcpy (&num, &ir->imm, sizeof (double));
 
         PrintCommand (file, "sub rsp, 8 \n");
@@ -120,13 +119,12 @@ static void HandlePop (FILE* file, Ir* ir)
 
     if (ir->imm_need && ir->mem_need && ir->reg_need)
     {
-        PrintCommand(file, "pop qword [%s + %d] \n", registers_strings[ir->reg1],  (int) ir->imm * ELEM_SIZE);
+        PrintCommand(file, "pop qword [%s + %llu] \n", registers_strings[ir->reg1],  (uint64_t) ir->imm * ELEM_SIZE);
     }
     else if (!ir->imm_need && !ir->mem_need && ir->reg_need)
     {
         PrintCommand(file, "pop %s \n", registers_strings[ir->reg1]);
     }
-    else NO_PROPER_CASE_FOUND;
 }
 
 static void HandleCall (FILE* file, Ir* ir)
@@ -134,7 +132,7 @@ static void HandleCall (FILE* file, Ir* ir)
     assert (file);
 
     PrintCommand (file, "add rbp, %d \n", MAX_VARS);
-    PrintCommand (file, "call %s \n", ir->label_name);
+    PrintCommand (file, "call %s \n", ir->func_name);
     PrintCommand (file, "sub rbp, %d \n", MAX_VARS);
 }
 
@@ -153,7 +151,7 @@ static void BeginAsmCode (FILE* file)
              "%%include \"stdlib.s\" \n"
              "global _start \n"
              "section .data \n"
-             "variables: times %d dq 0 \n"
+             "variables: times %d db 0 \n"
              "section .text \n"
              "_start: \n"
              "\t\tmov rbx, variables \n"
@@ -163,6 +161,6 @@ static void BeginAsmCode (FILE* file)
              "\t\tmov eax, 1 \n"
              "\t\tmov ebx, 0 \n"
              "\t\tint 80h \n",
-              MAX_VARS * MAX_FUNCS, MAX_VARS
+              VARIABLES_ARRAY_SIZE, MAX_VARS
             );
 }

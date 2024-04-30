@@ -2,9 +2,19 @@
 
 int main (int argc, const char** argv)
 {
+    Translation mode = HandleCommandLineArgs (argc, argv);
+    if (mode == Translation::ERR)
+    {
+        fprintf (stderr, "Incorrect command line arguments! \n");
+        return 0;
+    }
+
     Node* main_node = GetTree (TREE_TXT);
 
     List* ir_array = AstToIr (main_node);
 
-    TranslateToAsm (ir_array, argv[1]);
+    if (mode == Translation::ASM)
+        TranslateToAsm (ir_array, argv[2]);
+    else
+        TranslateToElf (ir_array, argv[2]);
 }

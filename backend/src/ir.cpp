@@ -1,6 +1,6 @@
 #include "backend.h"
 #include "config.h"
-#include "ir_config.h"
+#include "ir.h"
 #include "lang_tree.h"
 
 struct AsmInfo

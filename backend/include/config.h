@@ -5,6 +5,7 @@ const char* const TREE_TXT = "../middleend/tree.txt";
 
 const int MAX_VARS = 50;
 const int ELEM_SIZE = 8;
+const int VARIABLES_ARRAY_SIZE = 20000; // MAX_VARS * ELEM_SIZE * MAX_FUNCS
 
 typedef double elem_t;
 
@@ -31,23 +32,23 @@ enum class Commands
     JBE,
     JA,
     JB,
-    SQRT
+    SQRT,
 };
 
 enum Registers
 {
-    NO,
+    NO = -1,
     RAX,
-    RBX,
     RCX,
     RDX,
-    RDI,
-    RSI,
+    RBX,
     RSP,
-    RBP
+    RBP,
+    RSI,
+    RDI
 };
 
-const char* const registers_strings[] = {"\0", "rax", "rbx", "rcx", "rdx", "rdi", "rsi", "rsp", "rbp"};
+const char* const registers_strings[] = {"rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi"};
 
 struct Ir
 {
@@ -61,7 +62,7 @@ struct Ir
     Registers reg2;
     elem_t imm;
 
-    char* label_name;
+    char* func_name;
 };
 
 typedef Ir* list_elem_t;

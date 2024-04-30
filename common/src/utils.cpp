@@ -1,5 +1,23 @@
 #include "utils.h"
 
+const int ARGS_NUM = 3;
+
+Translation HandleCommandLineArgs (int args_num, const char** arguments)
+{
+    assert (arguments);
+
+    if (args_num != ARGS_NUM)
+        return Translation::ERR;
+
+    if (strcmp (arguments[1], "-S") == 0)
+        return Translation::ASM;
+
+    if (strcmp (arguments[1], "-E") == 0)
+        return Translation::ELF;
+
+    return Translation::ERR;
+}
+
 char* GetFileContent(const char* filename)
 {
     assert(filename);
@@ -7,6 +25,8 @@ char* GetFileContent(const char* filename)
     FILE* file = fopen(filename, "rb");
 
     int file_size = GetFileSize(file);
+
+    printf (file_size);
 
     char* buffer = (char*) calloc(file_size + 1, sizeof(char));
     assert(buffer);

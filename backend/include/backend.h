@@ -6,6 +6,7 @@
 #include "list.h"
 
 List* AstToIr (Node* main_node);
-void  TranslateToAsm (List* ir_array, const char* filename);
+void  TranslateToAsm  (List* ir_array, const char* filename);
+void  TranslateToElf  (List* ir_array, const char* filename);
 
 #endif

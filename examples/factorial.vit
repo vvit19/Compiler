@@ -3,7 +3,6 @@ func main ()
     var n = 5;
 
     var res = call factorial (n);
-    out (res);
 
     return 0;
 }
