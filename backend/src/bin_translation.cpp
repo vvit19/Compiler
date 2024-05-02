@@ -6,25 +6,25 @@
 #include <cstddef>
 #include <cstdio>
 
-static void FillTranslatorInfo (TranslatorInfo* translator, List* ir_array);
-static void BeginCode          (TranslatorInfo* translator);
-static void HandlePush         (TranslatorInfo* translator, Ir* ir);
-static void HandlePop          (TranslatorInfo* translator, Ir* ir);
-static void HandleCall         (TranslatorInfo* translator, Ir* ir);
-static void HandleMath         (TranslatorInfo* translator, Ir* ir);
-static void HandleInOut        (TranslatorInfo* translator, Ir* ir);
-static void HandleLabel        (TranslatorInfo* translator, Ir* ir);
-static void HandleFunc         (TranslatorInfo* translator, Ir* ir);
-static void HandleTwoRegsOp    (TranslatorInfo* translator, Ir* ir);
-static void HandleJump         (TranslatorInfo* translator, Ir* ir);
-static void HandleSqrt         (TranslatorInfo* translator, Ir* ir);
+static void FillTranslatorInfo     (TranslatorInfo* translator, List* ir_array);
+static void BeginCode              (TranslatorInfo* translator);
+static void HandlePush             (TranslatorInfo* translator, Ir* ir);
+static void HandlePop              (TranslatorInfo* translator, Ir* ir);
+static void HandleCall             (TranslatorInfo* translator, Ir* ir);
+static void HandleMath             (TranslatorInfo* translator, Ir* ir);
+static void HandleInOut            (TranslatorInfo* translator, Ir* ir);
+static void HandleLabel            (TranslatorInfo* translator, Ir* ir);
+static void HandleFunc             (TranslatorInfo* translator, Ir* ir);
+static void HandleTwoRegsOp        (TranslatorInfo* translator, Ir* ir);
+static void HandleJump             (TranslatorInfo* translator, Ir* ir);
+static void HandleSqrt             (TranslatorInfo* translator, Ir* ir);
+static void StackRegImmMem         (TranslatorInfo* translator, Registers reg, int offset, Commands command);
+static void PushMathRegImm         (TranslatorInfo* translator, Registers reg, int num, Commands command);
+static void MovRegImm              (TranslatorInfo* translator, Registers reg, long long num);
+static void StackReg               (TranslatorInfo* translator, Registers reg, Commands command);
+static void OpcodeToBuffer         (TranslatorInfo* translator, CommandsX86 command);
+static void PrintStdlibCode        (FILE* file);
 static unsigned char* FindFunction (TranslatorInfo* translator, char* func_name);
-static void StackRegImmMem     (TranslatorInfo* translator, Registers reg, int offset, Commands command);
-static void PushMathRegImm     (TranslatorInfo* translator, Registers reg, int num, Commands command);
-static void MovRegImm          (TranslatorInfo* translator, Registers reg, long long num);
-static void StackReg           (TranslatorInfo* translator, Registers reg, Commands command);
-static void OpcodeToBuffer     (TranslatorInfo* translator, CommandsX86 command);
-static void PrintStdlibCode    (FILE* file);
 
 void TranslateToElf (List* ir_array, const char* filename)
 {
@@ -109,7 +109,7 @@ static void BeginCode (TranslatorInfo* translator)
 {
     assert (translator);
 
-    unsigned char opcode[] = { 0x48, 0xC7, 0xC3, 0x78, 0x00, 0x40, 0x00, // mov rbx, variables
+    unsigned char opcode[] = { 0x48, 0xC7, 0xC3, 0x00, 0x10, 0x40, 0x00, // mov rbx, variables
                                0x48, 0x89, 0xDD,                         // mov rbp, rbx
                                0x48, 0x83, 0xC5, 0x32,                   // add rbp, 50
                                0xE8, 0x0C, 0x00, 0x00, 0x00,             // call main
@@ -251,11 +251,11 @@ static void HandleInOut (TranslatorInfo* translator, Ir* ir)
 
     if (ir->command == Commands::IN)
     {
-        *((int*) (CUR_BUF_ADDRESS - 4)) = IN_PTR - MAIN_PTR - translator->buffer_size;
+        *((int*) (CUR_BUF_ADDRESS - sizeof (int))) = IN_PTR - MAIN_PTR - translator->buffer_size;
     }
     else
     {
-        *((int*) (CUR_BUF_ADDRESS - 4)) = OUT_PTR - MAIN_PTR - translator->buffer_size;
+        *((int*) (CUR_BUF_ADDRESS - sizeof (int))) = OUT_PTR - MAIN_PTR - translator->buffer_size;
     }
 }
 
@@ -271,7 +271,7 @@ static void HandleCall (TranslatorInfo* translator, Ir* ir)
     if (translator->pass_number == SECOND_PASS)
     {
         unsigned char* call_address = FindFunction (translator, ir->func_name);
-        *((int*) (CUR_BUF_ADDRESS - 4)) = call_address - CUR_BUF_ADDRESS;
+        *((int*) (CUR_BUF_ADDRESS - sizeof (int))) = call_address - CUR_BUF_ADDRESS;
     }
 
     PushMathRegImm (translator, RBP, 50, Commands::SUB);
@@ -297,7 +297,7 @@ static void StackRegImmMem (TranslatorInfo* translator, Registers reg, int offse
         OpcodeToBuffer (translator, CommandsX86::POP_REG_IMM_MEM);
 
     translator->buffer[translator->buffer_size - 5] += reg;
-    *((int*) (CUR_BUF_ADDRESS - 4)) = offset;
+    *((int*) (CUR_BUF_ADDRESS - sizeof (int))) = offset;
 }
 
 static void PushMathRegImm (TranslatorInfo* translator, Registers reg, int num, Commands command)
@@ -312,7 +312,7 @@ static void PushMathRegImm (TranslatorInfo* translator, Registers reg, int num, 
     }
 
     translator->buffer[translator->buffer_size - 5] += reg;
-    *((int*) (CUR_BUF_ADDRESS - 4)) = num;
+    *((int*) (CUR_BUF_ADDRESS - sizeof (int))) = num;
 }
 
 static void MovRegImm (TranslatorInfo* translator, Registers reg, long long num)
@@ -321,7 +321,7 @@ static void MovRegImm (TranslatorInfo* translator, Registers reg, long long num)
 
     OpcodeToBuffer (translator, CommandsX86::MOV_REG_IMM);
     translator->buffer[translator->buffer_size - 9] += reg;
-    *((long long*) (CUR_BUF_ADDRESS - 8)) = num;
+    *((long long*) (CUR_BUF_ADDRESS - sizeof (long long))) = num;
 }
 
 static void StackReg (TranslatorInfo* translator, Registers reg, Commands command)

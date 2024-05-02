@@ -8,17 +8,20 @@
 
 #define CUR_BUF_ADDRESS &translator->buffer[translator->buffer_size]
 
-const char   FIRST_PASS = 1;
-const char   SECOND_PASS = 2;
-const size_t PAGE_SIZE = 4096;
-const size_t N_PAGES   = 2;
-const size_t START_ADDRESS = 0x400000;
-const size_t MAX_JUMPS = 200;
+const char   FIRST_PASS     = 1;
+const char   SECOND_PASS    = 2;
+const size_t PAGE_SIZE      = 4096;
+const size_t N_PAGES        = 2;
+const size_t START_ADDRESS  = 0x400000;
+const size_t DATA_ADDRESS   = 0x401000;
+const size_t CODE_ADDRESS   = 0x403000;
+const size_t MAX_JUMPS      = 200;
 const size_t MAX_OPCODE_LEN = 16;
-const size_t STDLIB_SIZE = 333;
-const size_t IN_PTR = START_ADDRESS + VARIABLES_ARRAY_SIZE;
-const size_t OUT_PTR = IN_PTR + 176;
-const size_t MAIN_PTR = START_ADDRESS + VARIABLES_ARRAY_SIZE + STDLIB_SIZE;
+const size_t STDLIB_SIZE    = 333;
+const size_t IN_PTR         = CODE_ADDRESS;
+const size_t IN_SIZE        = 176;
+const size_t OUT_PTR        = IN_PTR + IN_SIZE;
+const size_t MAIN_PTR       = CODE_ADDRESS + STDLIB_SIZE;
 
 const char* const STDLIB = "../examples/stdlib_bin";
 
