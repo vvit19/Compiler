@@ -1,23 +1,30 @@
 #include "backend.h"
+#include "config.h"
 #include "translator.h"
+#include "utils.h"
+#include <cassert>
+#include <cstddef>
+#include <cstdio>
 
 static void FillTranslatorInfo (TranslatorInfo* translator, List* ir_array);
-static void FillJumps          (JumpInfo* jump_table, size_t n_jumps);
 static void BeginCode          (TranslatorInfo* translator);
 static void HandlePush         (TranslatorInfo* translator, Ir* ir);
 static void HandlePop          (TranslatorInfo* translator, Ir* ir);
 static void HandleCall         (TranslatorInfo* translator, Ir* ir);
 static void HandleMath         (TranslatorInfo* translator, Ir* ir);
+static void HandleInOut        (TranslatorInfo* translator, Ir* ir);
+static void HandleLabel        (TranslatorInfo* translator, Ir* ir);
 static void HandleFunc         (TranslatorInfo* translator, Ir* ir);
 static void HandleTwoRegsOp    (TranslatorInfo* translator, Ir* ir);
 static void HandleJump         (TranslatorInfo* translator, Ir* ir);
 static void HandleSqrt         (TranslatorInfo* translator, Ir* ir);
-static int  FindFunction       (TranslatorInfo* translator, char* func_name);
+static unsigned char* FindFunction (TranslatorInfo* translator, char* func_name);
 static void StackRegImmMem     (TranslatorInfo* translator, Registers reg, int offset, Commands command);
 static void PushMathRegImm     (TranslatorInfo* translator, Registers reg, int num, Commands command);
 static void MovRegImm          (TranslatorInfo* translator, Registers reg, long long num);
 static void StackReg           (TranslatorInfo* translator, Registers reg, Commands command);
 static void OpcodeToBuffer     (TranslatorInfo* translator, CommandsX86 command);
+static void PrintStdlibCode    (FILE* file);
 
 void TranslateToElf (List* ir_array, const char* filename)
 {
@@ -26,15 +33,25 @@ void TranslateToElf (List* ir_array, const char* filename)
 
     TranslatorInfo translator = {};
     translator.buffer         = (unsigned char*) calloc (PAGE_SIZE * N_PAGES, sizeof (char));
-    translator.jump_table     = (JumpInfo*)      calloc (MAX_LABELS, sizeof (JumpInfo));
-    translator.call_table     = (JumpInfo*)      calloc (MAX_LABELS, sizeof (JumpInfo));
-    translator.buffer_size    = VARIABLES_ARRAY_SIZE; // skip vars array
+    translator.call_table     = (JumpInfo*)      calloc (MAX_JUMPS, sizeof (JumpInfo));
+    translator.jump_table     = (JumpInfo*)      calloc (MAX_JUMPS, sizeof (JumpInfo));
 
-    FillTranslatorInfo (&translator, ir_array);
-    FillJumps (translator.jump_table, translator.n_jumps);
-    FillJumps (translator.call_table, translator.n_calls);
+    translator.pass_number    = FIRST_PASS;
+    FillTranslatorInfo (&translator, ir_array);     // first pass
+
+    translator.pass_number = SECOND_PASS;
+    translator.buffer_size = 0;
+    FillTranslatorInfo (&translator, ir_array);     // second pass
+
     FILE* file = fopen (filename, "wb");
+    PrintHeaders (file, translator.buffer_size);
+
+    char* variables = (char*) calloc (VARIABLES_ARRAY_SIZE, sizeof (char));
+    fwrite (variables, VARIABLES_ARRAY_SIZE, sizeof (char), file);
+
+    PrintStdlibCode (file);
     fwrite (translator.buffer, sizeof (unsigned char), translator.buffer_size, file);
+
     fclose (file);
 }
 
@@ -55,30 +72,30 @@ static void FillTranslatorInfo (TranslatorInfo* translator, List* ir_array)
 
         switch (cur_ir->command)
         {
-            case Commands::PUSH:  HandlePush (translator, cur_ir); break;
-            case Commands::POP:   HandlePop  (translator, cur_ir); break;
+            case Commands::PUSH:  HandlePush (translator, cur_ir);               break;
+            case Commands::POP:   HandlePop  (translator, cur_ir);               break;
             case Commands::RET:   OpcodeToBuffer (translator, CommandsX86::RET); break;
-            case Commands::CALL:  HandleCall (translator, cur_ir); break;
+            case Commands::CALL:  HandleCall (translator, cur_ir);               break;
             case Commands::ADD:
             case Commands::SUB:
             case Commands::MUL:
-            case Commands::DIV:   HandleMath (translator, cur_ir); break;
-            case Commands::LABEL:
-                translator->jump_table[(int) cur_ir->imm].to = translator->buffer + translator->buffer_size; break;
-
-            case Commands::FUNC:  HandleFunc (translator, cur_ir); break;
+            case Commands::DIV:   HandleMath  (translator, cur_ir);              break;
+            case Commands::LABEL: if (translator->pass_number == FIRST_PASS)
+                                     { HandleLabel (translator, cur_ir); }       break;
+            case Commands::FUNC:  if (translator->pass_number == FIRST_PASS)
+                                     { HandleFunc (translator, cur_ir); }        break;
             case Commands::MOV:
-            case Commands::CMP:   HandleTwoRegsOp (translator, cur_ir); break;
-            // case Commands::IN:
-            // case Commands::OUT:
+            case Commands::CMP:   HandleTwoRegsOp (translator, cur_ir);          break;
+            case Commands::IN:
+            case Commands::OUT:   HandleInOut (translator, cur_ir);              break;
             case Commands::JUMP:
             case Commands::JA:
             case Commands::JAE:
             case Commands::JB:
             case Commands::JBE:
             case Commands::JE:
-            case Commands::JNE:   HandleJump (translator, cur_ir); break;
-            case Commands::SQRT:  HandleSqrt (translator, cur_ir); break;
+            case Commands::JNE:   HandleJump (translator, cur_ir);               break;
+            case Commands::SQRT:  HandleSqrt (translator, cur_ir);               break;
             default: NO_PROPER_CASE_FOUND;
         }
 
@@ -86,24 +103,6 @@ static void FillTranslatorInfo (TranslatorInfo* translator, List* ir_array)
         cur_node = nodes[cur_list_index];
     }
 
-}
-
-static void FillJumps (JumpInfo* jump_table, size_t n_jumps)
-{
-    assert (jump_table);
-
-    for (size_t i = 0; i < n_jumps; ++i)
-    {
-        unsigned char* from = jump_table[i].from;
-        unsigned char* to   = jump_table[i].to;
-
-        if (from == nullptr || to == nullptr) continue;
-
-        if (from <= to)
-            *((int*) from) = to - from;
-        else
-            *((int*) from) = from - to - OPCODES[(int) jump_table->jump_type].len;
-    }
 }
 
 static void BeginCode (TranslatorInfo* translator)
@@ -153,8 +152,10 @@ static void HandleFunc (TranslatorInfo* translator, Ir* ir)
     assert (translator);
     assert (ir);
 
-    int func_index = FindFunction (translator, ir->func_name);
-    translator->call_table[func_index].to = translator->buffer + translator->buffer_size;
+    JumpInfo* func = &translator->call_table[translator->n_calls];
+    func->func_name = ir->func_name;
+    ++translator->n_calls;
+    func->address = CUR_BUF_ADDRESS;
 }
 
 static void HandlePop (TranslatorInfo* translator, Ir* ir)
@@ -177,29 +178,23 @@ static void HandleJump (TranslatorInfo* translator, Ir* ir)
     assert (translator);
     assert (ir);
 
-    JumpInfo* jump_table = &translator->jump_table[(int) ir->imm];
-    jump_table->from = translator->buffer + translator->buffer_size;
-    ++translator->n_jumps;
-
     switch (ir->command)
     {
-        case Commands::JE:   OpcodeToBuffer (translator, CommandsX86::JE);  jump_table->jump_type = CommandsX86::JE;
-                             break;
-        case Commands::JNE:  OpcodeToBuffer (translator, CommandsX86::JNE); jump_table->jump_type = CommandsX86::JNE;
-                             break;
-        case Commands::JB:   OpcodeToBuffer (translator, CommandsX86::JL);  jump_table->jump_type = CommandsX86::JL;
-                             break;
-        case Commands::JA:   OpcodeToBuffer (translator, CommandsX86::JG);  jump_table->jump_type = CommandsX86::JG;
-                             break;
-        case Commands::JAE:  OpcodeToBuffer (translator, CommandsX86::JGE); jump_table->jump_type = CommandsX86::JGE;
-                             break;
-        case Commands::JBE:  OpcodeToBuffer (translator, CommandsX86::JLE); jump_table->jump_type = CommandsX86::JLE;
-                             break;
-        case Commands::JUMP: OpcodeToBuffer (translator, CommandsX86::JMP); jump_table->jump_type = CommandsX86::JMP;
-                             break;
+        case Commands::JE:   OpcodeToBuffer (translator, CommandsX86::JE);  break;
+        case Commands::JNE:  OpcodeToBuffer (translator, CommandsX86::JNE); break;
+        case Commands::JB:   OpcodeToBuffer (translator, CommandsX86::JL);  break;
+        case Commands::JA:   OpcodeToBuffer (translator, CommandsX86::JG);  break;;
+        case Commands::JAE:  OpcodeToBuffer (translator, CommandsX86::JGE); break;
+        case Commands::JBE:  OpcodeToBuffer (translator, CommandsX86::JLE); break;
+        case Commands::JUMP: OpcodeToBuffer (translator, CommandsX86::JMP); break;
 
         default: NO_PROPER_CASE_FOUND;
     }
+
+    if (translator->pass_number == FIRST_PASS) return;
+
+    unsigned char* jump_address = translator->jump_table[(int) ir->imm].address;
+    *((int*) (CUR_BUF_ADDRESS - 4)) = jump_address - CUR_BUF_ADDRESS;
 }
 
 static void HandleMath (TranslatorInfo* translator, Ir* ir)
@@ -219,6 +214,17 @@ static void HandleMath (TranslatorInfo* translator, Ir* ir)
         case Commands::DIV: OpcodeToBuffer (translator, CommandsX86::DIV_XMM0_XMM1); break;
         default: NO_PROPER_CASE_FOUND;
     }
+
+    OpcodeToBuffer(translator, CommandsX86::MOV_RSP_XMM0);
+}
+
+static void HandleLabel (TranslatorInfo* translator, Ir* ir)
+{
+    assert (translator);
+    assert (ir);
+
+    JumpInfo* label = &translator->jump_table[(int) ir->imm];
+    label->address = CUR_BUF_ADDRESS;
 }
 
 static void HandleTwoRegsOp (TranslatorInfo* translator, Ir* ir)
@@ -236,6 +242,23 @@ static void HandleTwoRegsOp (TranslatorInfo* translator, Ir* ir)
     translator->buffer[translator->buffer_size - 1] |= ir->reg1 | (ir->reg2 << 3);
 }
 
+static void HandleInOut (TranslatorInfo* translator, Ir* ir)
+{
+    assert (translator);
+    assert (ir);
+
+    OpcodeToBuffer (translator, CommandsX86::CALL);
+
+    if (ir->command == Commands::IN)
+    {
+        *((int*) (CUR_BUF_ADDRESS - 4)) = IN_PTR - MAIN_PTR - translator->buffer_size;
+    }
+    else
+    {
+        *((int*) (CUR_BUF_ADDRESS - 4)) = OUT_PTR - MAIN_PTR - translator->buffer_size;
+    }
+}
+
 static void HandleCall (TranslatorInfo* translator, Ir* ir)
 {
     assert (translator);
@@ -243,13 +266,13 @@ static void HandleCall (TranslatorInfo* translator, Ir* ir)
 
     PushMathRegImm (translator, RBP, 50, Commands::ADD);
 
-    int func_index = FindFunction (translator, ir->func_name);
-    JumpInfo* call_table = &translator->call_table[func_index];
-
-    call_table->from = translator->buffer + translator->buffer_size;
-    call_table->jump_type = CommandsX86::CALL;
-
     OpcodeToBuffer (translator, CommandsX86::CALL);
+
+    if (translator->pass_number == SECOND_PASS)
+    {
+        unsigned char* call_address = FindFunction (translator, ir->func_name);
+        *((int*) (CUR_BUF_ADDRESS - 4)) = call_address - CUR_BUF_ADDRESS;
+    }
 
     PushMathRegImm (translator, RBP, 50, Commands::SUB);
 }
@@ -274,7 +297,7 @@ static void StackRegImmMem (TranslatorInfo* translator, Registers reg, int offse
         OpcodeToBuffer (translator, CommandsX86::POP_REG_IMM_MEM);
 
     translator->buffer[translator->buffer_size - 5] += reg;
-    *((int*) (translator->buffer + translator->buffer_size - 4)) = offset;
+    *((int*) (CUR_BUF_ADDRESS - 4)) = offset;
 }
 
 static void PushMathRegImm (TranslatorInfo* translator, Registers reg, int num, Commands command)
@@ -289,7 +312,7 @@ static void PushMathRegImm (TranslatorInfo* translator, Registers reg, int num, 
     }
 
     translator->buffer[translator->buffer_size - 5] += reg;
-    *((int*) (translator->buffer + translator->buffer_size - 4)) = num;
+    *((int*) (CUR_BUF_ADDRESS - 4)) = num;
 }
 
 static void MovRegImm (TranslatorInfo* translator, Registers reg, long long num)
@@ -298,7 +321,7 @@ static void MovRegImm (TranslatorInfo* translator, Registers reg, long long num)
 
     OpcodeToBuffer (translator, CommandsX86::MOV_REG_IMM);
     translator->buffer[translator->buffer_size - 9] += reg;
-    *((long long*) (translator->buffer + translator->buffer_size - 8)) = num;
+    *((long long*) (CUR_BUF_ADDRESS - 8)) = num;
 }
 
 static void StackReg (TranslatorInfo* translator, Registers reg, Commands command)
@@ -321,7 +344,7 @@ static void OpcodeToBuffer (TranslatorInfo* translator, CommandsX86 command)
     translator->buffer_size += OPCODES[(int) command].len;
 }
 
-static int FindFunction (TranslatorInfo* translator, char* func_name)
+static unsigned char* FindFunction (TranslatorInfo* translator, char* func_name)
 {
     assert (translator);
     assert (func_name);
@@ -332,12 +355,23 @@ static int FindFunction (TranslatorInfo* translator, char* func_name)
     for (size_t i = 0; i < size; ++i)
     {
         if (strcmp (func_name, call_table[i].func_name) == 0)
-            return i;
+            return call_table[i].address;
     }
 
-    int func_index = size;
-    call_table[func_index].func_name = func_name;
-    ++translator->n_calls;
+    return nullptr;
+}
 
-    return func_index;
+static void PrintStdlibCode (FILE* file)
+{
+    assert (file);
+
+    unsigned char* buffer = (unsigned char*) calloc (STDLIB_SIZE, sizeof (unsigned char));
+
+    FILE* stdlib_file = fopen (STDLIB, "rb");
+    assert (stdlib_file);
+
+    fread (buffer, STDLIB_SIZE, sizeof (unsigned char), stdlib_file);
+    fclose (stdlib_file);
+
+    fwrite (buffer, STDLIB_SIZE, sizeof (unsigned char), file);
 }

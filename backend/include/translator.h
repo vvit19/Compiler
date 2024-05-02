@@ -1,23 +1,26 @@
 #ifndef TRANSLATOR_H
 #define TRANSLATOR_H
 
-#include "cstdlib"
+#include "config.h"
+#include "cstdio"
 #include <cstddef>
 #include <cstdint>
 
 #define CUR_BUF_ADDRESS &translator->buffer[translator->buffer_size]
 
+const char   FIRST_PASS = 1;
+const char   SECOND_PASS = 2;
 const size_t PAGE_SIZE = 4096;
-const size_t N_PAGES   = 10;
+const size_t N_PAGES   = 2;
 const size_t START_ADDRESS = 0x400000;
-const size_t MAX_LABELS = 100;
+const size_t MAX_JUMPS = 200;
 const size_t MAX_OPCODE_LEN = 16;
+const size_t STDLIB_SIZE = 333;
+const size_t IN_PTR = START_ADDRESS + VARIABLES_ARRAY_SIZE;
+const size_t OUT_PTR = IN_PTR + 176;
+const size_t MAIN_PTR = START_ADDRESS + VARIABLES_ARRAY_SIZE + STDLIB_SIZE;
 
-union Label
-{
-    int label_num;
-    char* func_name;
-};
+const char* const STDLIB = "../examples/stdlib_bin";
 
 enum class CommandsX86
 {
@@ -52,10 +55,9 @@ enum class CommandsX86
 
 struct JumpInfo
 {
-    unsigned char* from;
-    unsigned char* to;
+    unsigned char* address;
     char* func_name;
-    CommandsX86 jump_type;
+    int label_num;
 };
 
 struct TranslatorInfo
@@ -64,8 +66,8 @@ struct TranslatorInfo
     size_t buffer_size;
     JumpInfo* jump_table;
     JumpInfo* call_table;
-    size_t n_jumps;
     size_t n_calls;
+    char pass_number;
 };
 
 struct OpCode
@@ -105,5 +107,7 @@ const OpCode OPCODES[]
     {CommandsX86::JMP,              {0xE9, 0x00, 0x00, 0x00, 0x00}, 5},
     {CommandsX86::SQRT,             {0xF2, 0x0F, 0x51, 0xC1}, 4},
 };
+
+void PrintHeaders (FILE* file, size_t code_size);
 
 #endif

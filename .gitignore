@@ -13,4 +13,3 @@ middleend/.cache
 middleend/middle
 frontend/front
 frontend/dump.dot
-examples/main

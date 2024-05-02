@@ -2,7 +2,6 @@ section .text
 
 ; ---------------------------------
 ; Scanf for doubles
-
 in:
         pop r13         ; ret address
         push rbx

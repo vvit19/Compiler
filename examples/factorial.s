@@ -1,12 +1,12 @@
 %include "stdlib.s" 
 global _start 
 section .data 
-variables: times 20000 db 0 
+variables: times 8192 db 0 
 section .text 
 _start: 
 		mov rbx, variables 
 		mov rbp, rbx 
-		add rbp, 50 
+		add rbp, 32 
 		call main 
 		mov eax, 1 
 		mov ebx, 0 
@@ -24,9 +24,9 @@ main:
 		pop qword [rbp + 0] 
 		push rsi 
 		push qword [rbp + 0] 
-		add rbp, 50 
+		add rbp, 32 
 		call factorial 
-		sub rbp, 50 
+		sub rbp, 32 
 		pop rsi 
 		push rax 
 		pop qword [rbp + 8] 
@@ -68,9 +68,9 @@ L_0:
 		pop rcx
 		subsd xmm0, xmm1 
 		movsd qword [rsp], xmm0 
-		add rbp, 50 
+		add rbp, 32 
 		call factorial 
-		sub rbp, 50 
+		sub rbp, 32 
 		pop rsi 
 		push rax 
 		pop qword [rbp + 8] 

@@ -1,11 +1,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <cstddef>
+
 const char* const TREE_TXT = "../middleend/tree.txt";
 
-const int MAX_VARS = 50;
-const int ELEM_SIZE = 8;
-const int VARIABLES_ARRAY_SIZE = 20000; // MAX_VARS * ELEM_SIZE * MAX_FUNCS
+const size_t MAX_VARS = 32;
+const size_t ELEM_SIZE = 8;
+const size_t VARIABLES_ARRAY_SIZE = 8192; // MAX_VARS * ELEM_SIZE * MAX_FUNCS
 
 typedef double elem_t;
 
