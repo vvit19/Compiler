@@ -38,9 +38,9 @@ void MakeElfHeader (Elf64_Ehdr* header)
     assert (header);
 
     header->e_ident[EI_MAG0]    = ELFMAG0;
-    header->e_ident[EI_MAG1]    = ELFMAG1;
-    header->e_ident[EI_MAG2]    = ELFMAG2;
-    header->e_ident[EI_MAG3]    = ELFMAG3;
+    header->e_ident[EI_MAG1]    = ELFMAG1;      // E
+    header->e_ident[EI_MAG2]    = ELFMAG2;      // L
+    header->e_ident[EI_MAG3]    = ELFMAG3;      // F
     header->e_ident[EI_CLASS]   = ELFCLASS64;
     header->e_ident[EI_DATA]    = ELFDATA2LSB;
     header->e_ident[EI_VERSION] = EV_CURRENT;
@@ -50,11 +50,11 @@ void MakeElfHeader (Elf64_Ehdr* header)
     header->e_version           = EV_CURRENT;
     header->e_entry             = MAIN_PTR;
     header->e_phoff             = sizeof (Elf64_Ehdr);
-    header->e_shoff             = 0;    // no section table
+    header->e_shoff             = 0;            // no section table
     header->e_flags             = 0;
     header->e_ehsize            = sizeof (Elf64_Ehdr);
     header->e_phentsize         = sizeof (Elf64_Phdr);
-    header->e_phnum             = 3;    // program, code, data headers
+    header->e_phnum             = 3;            // program, code, data headers
 }
 
 void MakeProgHeader (Elf64_Phdr* header)

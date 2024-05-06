@@ -72,6 +72,8 @@ static void HandleMath (FILE* file, Ir* ir)
     assert (file);
     assert (ir);
 
+    fprintf (file, "\n; Math operation:\n");
+
     PrintCommand (file, "movsd xmm0, qword [rsp + 8] \n");
     PrintCommand (file, "movsd xmm1, qword [rsp] \n");
     PrintCommand (file, "pop rcx\n");
@@ -85,7 +87,7 @@ static void HandleMath (FILE* file, Ir* ir)
         default: NO_PROPER_CASE_FOUND;
     }
 
-    PrintCommand(file, "movsd qword [rsp], xmm0 \n");
+    PrintCommand(file, "movsd qword [rsp], xmm0 \n\n");
 }
 
 static void HandlePush (FILE* file, Ir* ir)
@@ -99,12 +101,14 @@ static void HandlePush (FILE* file, Ir* ir)
     }
     else if (ir->imm_need && !ir->mem_need && !ir->reg_need)
     {
+        fprintf (file, "\n; Push imm (double) \n");
+
         long long num = 0;
         memcpy (&num, &ir->imm, sizeof (double));
 
         PrintCommand (file, "sub rsp, 8 \n");
         PrintCommand (file, "mov rcx, 0x%llx \n", num);
-        PrintCommand (file, "mov qword [rsp], rcx \n");
+        PrintCommand (file, "mov qword [rsp], rcx \n\n");
     }
     else if (!ir->imm_need && !ir->mem_need && ir->reg_need)
     {
@@ -131,16 +135,20 @@ static void HandleCall (FILE* file, Ir* ir)
 {
     assert (file);
 
-    PrintCommand (file, "add rbp, %d \n", MAX_VARS);
+    fprintf (file, "\n; Call: \n");
+
+    PrintCommand (file, "add rbp, %d \n", MAX_VARS_LEN);
     PrintCommand (file, "call %s \n", ir->func_name);
-    PrintCommand (file, "sub rbp, %d \n", MAX_VARS);
+    PrintCommand (file, "sub rbp, %d \n\n", MAX_VARS_LEN);
 }
 
 static void HandleSqrt (FILE* file, Ir* ir)
 {
+    fprintf (file, "; Sqrt: \n");
+
     PrintCommand (file, "movsd xmm1, qword [rsp] \n");
     PrintCommand (file, "sqrtsd xmm0, xmm1 \n");
-    PrintCommand (file, "movsd qword [rsp], xmm0 \n");
+    PrintCommand (file, "movsd qword [rsp], xmm0 \n\n");
 }
 
 static void BeginAsmCode (FILE* file)
@@ -161,6 +169,6 @@ static void BeginAsmCode (FILE* file)
              "\t\tmov eax, 1 \n"
              "\t\tmov ebx, 0 \n"
              "\t\tint 80h \n",
-              VARIABLES_ARRAY_SIZE, MAX_VARS
+              VARIABLES_ARRAY_SIZE, MAX_VARS_LEN
             );
 }

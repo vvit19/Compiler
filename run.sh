@@ -18,7 +18,7 @@ make
 cd ..
 
 cd examples
-nasm -f elf64 $1.s -I stdlib.s
+nasm -f elf64 $1.s
 ld -no-pie $1.o -o main
 ./main
 cd ..

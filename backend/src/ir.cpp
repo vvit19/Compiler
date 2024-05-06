@@ -81,31 +81,29 @@ static void PushOp (List* ir_list, Node* node, AsmInfo* info)
 
     switch (node->value.op)
     {
-        case NEXT_OP:          CHILDREN_TO_IR;                     break;
-        case FUNC:             PushFunction (ir_list, node, info); break;
-        case VAR: case GL_VAR: PushNewVar   (ir_list, node, info); break;
-        case CALL:             PushCall     (ir_list, node, info); break;
-        case RET:              PushRet      (ir_list, node, info); break;
-        case PARAM:            PushParam    (ir_list, node, info); break;
-        case IN:               PushIn       (ir_list, node, info); break;
-        case OUT:              PushOut      (ir_list, node, info); break;
-        case IF:               PushIf       (ir_list, node, info); break;
-        case ELSE:             PushElse     (ir_list, node, info); break;
-        case EQ:               PushEq       (ir_list, node, info); break;
-        case WHILE:            PushWhile    (ir_list, node, info); break;
-        case SQRT:             PushSqrt     (ir_list, node, info); break;
-        case ISEQ:             PushCondJump (ir_list, Commands::JNE, node, info); break;
-        case NEQ:              PushCondJump (ir_list, Commands::JE,  node, info); break;
+        case NEXT_OP:          CHILDREN_TO_IR;                                     break;
+        case FUNC:             PushFunction (ir_list, node, info);                 break;
+        case VAR: case GL_VAR: PushNewVar   (ir_list, node, info);                 break;
+        case CALL:             PushCall     (ir_list, node, info);                 break;
+        case RET:              PushRet      (ir_list, node, info);                 break;
+        case PARAM:            PushParam    (ir_list, node, info);                 break;
+        case IN:               PushIn       (ir_list, node, info);                 break;
+        case OUT:              PushOut      (ir_list, node, info);                 break;
+        case IF:               PushIf       (ir_list, node, info);                 break;
+        case ELSE:             PushElse     (ir_list, node, info);                 break;
+        case EQ:               PushEq       (ir_list, node, info);                 break;
+        case WHILE:            PushWhile    (ir_list, node, info);                 break;
+        case SQRT:             PushSqrt     (ir_list, node, info);                 break;
+        case ISEQ:             PushCondJump (ir_list, Commands::JNE, node, info);  break;
+        case NEQ:              PushCondJump (ir_list, Commands::JE,  node, info);  break;
         case BIGGER:           PushCondJump (ir_list, Commands::JAE,  node, info); break;
         case SMALLER:          PushCondJump (ir_list, Commands::JBE,  node, info); break;
-        case BIGEQ:            PushCondJump (ir_list, Commands::JA, node, info); break;
-        case SMALLEQ:          PushCondJump (ir_list, Commands::JB, node, info); break;
-        case ADD:              PushMathOp   (ir_list, Commands::ADD, node, info); break;
-        case SUB:              PushMathOp   (ir_list, Commands::SUB, node, info); break;
-        case MULT:             PushMathOp   (ir_list, Commands::MUL, node, info); break;
-        case DIV:              PushMathOp   (ir_list, Commands::DIV, node, info); break;
-        // case SIN:              PushMathOp   (ir_list, Commands::ADD, node, info); break;
-        // case COS:              PushMathOp   (ir_list, Commands::ADD, node, info); break;
+        case BIGEQ:            PushCondJump (ir_list, Commands::JA, node, info);   break;
+        case SMALLEQ:          PushCondJump (ir_list, Commands::JB, node, info);   break;
+        case ADD:              PushMathOp   (ir_list, Commands::ADD, node, info);  break;
+        case SUB:              PushMathOp   (ir_list, Commands::SUB, node, info);  break;
+        case MULT:             PushMathOp   (ir_list, Commands::MUL, node, info);  break;
+        case DIV:              PushMathOp   (ir_list, Commands::DIV, node, info);  break;
         default:               NO_PROPER_CASE_FOUND;
     }
 }

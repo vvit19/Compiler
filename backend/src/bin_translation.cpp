@@ -111,7 +111,7 @@ static void BeginCode (TranslatorInfo* translator)
 
     unsigned char opcode[] = { 0x48, 0xC7, 0xC3, 0x00, 0x10, 0x40, 0x00, // mov rbx, variables
                                0x48, 0x89, 0xDD,                         // mov rbp, rbx
-                               0x48, 0x83, 0xC5, 0x32,                   // add rbp, 50
+                               0x48, 0x81, 0xC5, 0x00, 0x01, 0x00, 0x00, // add rbp, MAX_VARS_LEN
                                0xE8, 0x0C, 0x00, 0x00, 0x00,             // call main
                                0xB8, 0x01, 0x00, 0x00, 0x00,             // mov eax, 1
                                0xBB, 0x00, 0x00, 0x00, 0x00,             // mov ebx, 0
@@ -264,7 +264,7 @@ static void HandleCall (TranslatorInfo* translator, Ir* ir)
     assert (translator);
     assert (ir);
 
-    PushMathRegImm (translator, RBP, 50, Commands::ADD);
+    PushMathRegImm (translator, RBP, MAX_VARS_LEN, Commands::ADD);
 
     OpcodeToBuffer (translator, CommandsX86::CALL);
 
@@ -274,7 +274,7 @@ static void HandleCall (TranslatorInfo* translator, Ir* ir)
         *((int*) (CUR_BUF_ADDRESS - sizeof (int))) = call_address - CUR_BUF_ADDRESS;
     }
 
-    PushMathRegImm (translator, RBP, 50, Commands::SUB);
+    PushMathRegImm (translator, RBP, MAX_VARS_LEN, Commands::SUB);
 }
 
 static void HandleSqrt (TranslatorInfo* translator, Ir* ir)
