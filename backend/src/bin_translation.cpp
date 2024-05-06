@@ -53,6 +53,11 @@ void TranslateToElf (List* ir_array, const char* filename)
     fwrite (translator.buffer, sizeof (unsigned char), translator.buffer_size, file);
 
     fclose (file);
+
+    free (translator.buffer);
+    free (translator.call_table);
+    free (translator.jump_table);
+    free (variables);
 }
 
 static void FillTranslatorInfo (TranslatorInfo* translator, List* ir_array)
@@ -374,4 +379,6 @@ static void PrintStdlibCode (FILE* file)
     fclose (stdlib_file);
 
     fwrite (buffer, STDLIB_SIZE, sizeof (unsigned char), file);
+
+    free (buffer);
 }

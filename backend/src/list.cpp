@@ -265,10 +265,14 @@ void ListDtor (List* list)
 {
     assert (list);
 
-    free (list->nodes);
+    int capacity = list->capacity;
+    ListNode* nodes = list->nodes;
 
-    list->capacity = list->free = list->head = list->size = list->tail = -1;
-    list->linear = false;
+    for (int i = 0; i < capacity; ++i)
+        free (nodes[i].value);
+
+    free (nodes);
+    free (list);
 }
 
 static ListErrors VerifyFullList (List* list)

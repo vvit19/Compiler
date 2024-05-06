@@ -31,6 +31,8 @@ void PrintHeaders (FILE* file, size_t code_size)
     memcpy (prog_segment, &headers, sizeof (ElfHeaders));
 
     fwrite (prog_segment, PAGE_SIZE, 1, file);
+
+    free (prog_segment);
 }
 
 void MakeElfHeader (Elf64_Ehdr* header)
