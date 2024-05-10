@@ -1,6 +1,6 @@
 # Compiler
 ## Description
-This project is an implementation of compiler from [my own language](https://github.com/vvit19/Language) to x86-64 executable file (Elf). Optionally it can generate assembly (```nasm```) listing.
+This project is an implementation of a compiler from [my own language](https://github.com/vvit19/Language) to x86-64 executable file (Elf). Optionally it can generate ```Nasm``` assembly listing.
 ## Build
 - Clone the repo:
 ```
@@ -16,8 +16,10 @@ bash run.sh filename
 bash run.sh filename -S
 ```
 ## Compiling process
-1) Parsing code to tree (frontend) and optimizing it (middleend) - these stages were the same in my language
-2) Converting tree to an intermediate representation (IR) - it is [double-linked list](https://github.com/vvit19/List), which elements are structures:
+1) Parsing code to tree (frontend)
+2) Optimizing tree (middleend)
+> Middleend and frontend stages were the same in my language project.
+3) Converting tree into the intermediate representation (IR). IR is based on double-linked list, where each node has the following structure:
 ``` C++
 struct Ir
 {
@@ -35,20 +37,11 @@ struct Ir
 };
 ```
 
-3) Ir optimization.
+> Double-linked list was chosen in order to simplify optimizations, because it has simple nodes deletions. Currently, optimizations are not done due to author's exams at MIPT.
 
-    I have chosen double-linked list, because it can help in optimizations, due to simple list node deletions. I optimized structures like this (well, I hope I'll do this soon):
+4) Translation of intermediate representation into Elf file.
 
-``` asm
-Not optimized                               Optimized
-
-push [rbp + 8]                              mov rcx, [rbp + 8]
-pop rcx
-```
-
-4)  Translation of intermediate representation into Elf file.
-
-    I have simple elf file format with 3 segments:
+    Generated Elf file has 3 segments:
 
     - service segment - it stores information about elf headers
 
@@ -56,6 +49,25 @@ pop rcx
 
     - text segment - segment for code with executing and reading rights
 
-    > If ```-S``` option was chosen - at this stage the translation will be done into ```NASM```, not into ```Elf```.
+> If ```-S``` option was chosen - at this stage translation will be done into ```Nasm``` instead of ```Elf```.
 
 ## Performance test
+
+Test consits of comparing the performance of generated Elf file and executable file from [my language project](https://github.com/vvit19/Language). The runtime is detected by ```_rdtsc()``` function.
+
+There are 2 programs ([factorial](examples/factorial_bench.vit) and [quadratic](examples/qudratic_bench.vit)) for tests, written in my language:
+
+1) Calculating 6! for 5000000 times:
+
+| Elf file <br> CPU ticks | Out file from my language <br> CPU ticks | Boost    |
+| :---------------------: | :--------------------------------------: | :------: |
+| 461 926 802             | 52 906 517                               | 8,73     |
+
+2) Solving quadratic equation $x^2 + 3x + 2 = 0$ for 5000000 times:
+
+| Elf file <br> CPU ticks | Out file from my language <br> CPU ticks | Boost    |
+| :---------------------: | :--------------------------------------: | :------: |
+| 271 504 720             | 32 926 944                               | 8,25     |
+
+
+It's obvious that generated Elf file is several times faster.

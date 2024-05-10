@@ -1,10 +1,6 @@
 #include "backend.h"
 #include "config.h"
 #include "translator.h"
-#include "utils.h"
-#include <cassert>
-#include <cstddef>
-#include <cstdio>
 
 static void FillTranslatorInfo     (TranslatorInfo* translator, List* ir_array);
 static void BeginCode              (TranslatorInfo* translator);
@@ -43,7 +39,7 @@ void TranslateToElf (List* ir_array, const char* filename)
     translator.buffer_size = 0;
     FillTranslatorInfo (&translator, ir_array);     // second pass
 
-    FILE* file = fopen (filename, "wb");
+    FILE* file = GetFile (filename, "wb");
     PrintHeaders (file, translator.buffer_size);
 
     char* variables = (char*) calloc (VARIABLES_ARRAY_SIZE, sizeof (char));
@@ -372,8 +368,7 @@ static void PrintStdlibCode (FILE* file)
 
     unsigned char* buffer = (unsigned char*) calloc (STDLIB_SIZE, sizeof (unsigned char));
 
-    FILE* stdlib_file = fopen (STDLIB, "rb");
-    assert (stdlib_file);
+    FILE* stdlib_file = GetFile (STDLIB, "rb");
 
     fread (buffer, STDLIB_SIZE, sizeof (unsigned char), stdlib_file);
     fclose (stdlib_file);

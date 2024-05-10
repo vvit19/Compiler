@@ -288,7 +288,7 @@ static void PushWhile (List* ir_list, Node* node, AsmInfo* info)
     LEFT_CHILD_TO_IR;
 
     int end_label   = info->label_num++;
-    int while_label = info->label_num;
+    int while_label = info->label_num++;
 
     Ir* ir = NewIr ({Commands::LABEL, IMM_NEED, NO, NO, (elem_t) while_label, nullptr});
     INSERT;

@@ -14,7 +14,7 @@ static void BeginAsmCode (FILE* file);
 
 void TranslateToAsm (List* ir_array, const char* filename)
 {
-    FILE* asm_file = fopen (filename, "w");
+    FILE* asm_file = GetFile (filename, "w");
 
     BeginAsmCode (asm_file);
 

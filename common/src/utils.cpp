@@ -2,6 +2,17 @@
 
 const int ARGS_NUM = 3;
 
+FILE* GetFile (const char* filename, const char* format)
+{
+    assert (filename);
+    assert (format);
+
+    FILE* file = fopen (filename, format);
+    if (!file) fprintf (stderr, "Error opening file: `%s` \n", filename);
+
+    return file;
+}
+
 Translation HandleCommandLineArgs (int args_num, const char** arguments)
 {
     assert (arguments);

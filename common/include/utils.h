@@ -44,6 +44,7 @@ int    SkipSpaces     (char* buffer, int i);
 int    Factorial      (int n);
 bool   IsInt          (double n);
 int    PrintCommand   (FILE* file, const char* command, ...);
+FILE*  GetFile        (const char* filename, const char* format);
 
 Translation HandleCommandLineArgs (int args_num, const char** arguments);
 

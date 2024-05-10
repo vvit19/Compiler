@@ -1,4 +1,4 @@
-CFLAGS = -O3 -g
+CFLAGS = -O3
 
 СС = g++
 TARGET = front

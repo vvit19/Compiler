@@ -13,3 +13,5 @@ middleend/.cache
 middleend/middle
 frontend/front
 frontend/dump.dot
+examples/benchmark
+examples/benchmark.cpp
