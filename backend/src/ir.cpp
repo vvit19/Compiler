@@ -3,7 +3,7 @@
 #include "ir.h"
 #include "lang_tree.h"
 
-struct AsmInfo
+struct IrInfo
 {
     char**   names_table;
     char**   global_names_table;
@@ -13,27 +13,27 @@ struct AsmInfo
     KeyWords prev_option;
 };
 
-static void  NodeToIr       (List* ir_list, Node* node, AsmInfo* info);
+static void  NodeToIr       (List* ir_list, Node* node, IrInfo* info);
 static void  PushNum        (List* ir_list, elem_t num);
-static void  PushVar        (List* ir_list, const char* var, AsmInfo* info);
-static void  PopVar         (List* ir_list, const char* var, AsmInfo* info);
-static void  PushFuncName   (List* ir_list, Node* node, AsmInfo* info);
-static void  PushFunction   (List* ir_list, Node* node, AsmInfo* info);
-static void  PushNewVar     (List* ir_list, Node* node, AsmInfo* info);
-static void  PushCall       (List* ir_list, Node* node, AsmInfo* info);
-static void  PushRet        (List* ir_list, Node* node, AsmInfo* info);
-static void  PushIn         (List* ir_list, Node* node, AsmInfo* info);
-static void  PushOut        (List* ir_list, Node* node, AsmInfo* info);
-static void  PushIf         (List* ir_list, Node* node, AsmInfo* info);
-static void  PushElse       (List* ir_list, Node* node, AsmInfo* info);
-static void  PushEq         (List* ir_list, Node* node, AsmInfo* info);
-static void  PushWhile      (List* ir_list, Node* node, AsmInfo* info);
-static void  PushParams     (List* ir_list, Node* node, AsmInfo* info);
-static void  PushParam      (List* ir_list, Node* node, AsmInfo* info);
-static void  PushSqrt       (List* ir_list, Node* node, AsmInfo* info);
-static void  PushCondJump   (List* ir_list, Commands jump, Node* node, AsmInfo* info);
-static void  PushMathOp     (List* ir_list, Commands op,   Node* node, AsmInfo* info);
-static void  PushOp         (List* ir_list, Node* node, AsmInfo* info);
+static void  PushVar        (List* ir_list, const char* var, IrInfo* info);
+static void  PopVar         (List* ir_list, const char* var, IrInfo* info);
+static void  PushFuncName   (List* ir_list, Node* node, IrInfo* info);
+static void  PushFunction   (List* ir_list, Node* node, IrInfo* info);
+static void  PushNewVar     (List* ir_list, Node* node, IrInfo* info);
+static void  PushCall       (List* ir_list, Node* node, IrInfo* info);
+static void  PushRet        (List* ir_list, Node* node, IrInfo* info);
+static void  PushIn         (List* ir_list, Node* node, IrInfo* info);
+static void  PushOut        (List* ir_list, Node* node, IrInfo* info);
+static void  PushIf         (List* ir_list, Node* node, IrInfo* info);
+static void  PushElse       (List* ir_list, Node* node, IrInfo* info);
+static void  PushEq         (List* ir_list, Node* node, IrInfo* info);
+static void  PushWhile      (List* ir_list, Node* node, IrInfo* info);
+static void  PushParams     (List* ir_list, Node* node, IrInfo* info);
+static void  PushParam      (List* ir_list, Node* node, IrInfo* info);
+static void  PushSqrt       (List* ir_list, Node* node, IrInfo* info);
+static void  PushCondJump   (List* ir_list, Commands jump, Node* node, IrInfo* info);
+static void  PushMathOp     (List* ir_list, Commands op,   Node* node, IrInfo* info);
+static void  PushOp         (List* ir_list, Node* node, IrInfo* info);
 static int   GetVarPosition (const char* var, char** names_array, int n_names);
 static Ir*   NewIr          (Ir ir_copy);
 
@@ -42,7 +42,7 @@ List* AstToIr (Node* main_node)
     List* ir_list = (List*) calloc (1, sizeof (List));
     ListCtor (ir_list, INITIAL_LIST_CAPACITY);
 
-    struct AsmInfo info     = {};
+    struct IrInfo info     = {};
     info.names_table        = (char**) calloc (MAX_VARS, sizeof (char*));
     info.global_names_table = (char**) calloc (MAX_VARS, sizeof (char*));
     info.global_names_num   = 0;
@@ -58,7 +58,7 @@ List* AstToIr (Node* main_node)
     return ir_list;
 }
 
-static void NodeToIr (List* ir_list, Node* node, AsmInfo* info)
+static void NodeToIr (List* ir_list, Node* node, IrInfo* info)
 {
     assert (ir_list);
     assert (info);
@@ -75,7 +75,7 @@ static void NodeToIr (List* ir_list, Node* node, AsmInfo* info)
         PushOp (ir_list, node, info);
 }
 
-static void PushOp (List* ir_list, Node* node, AsmInfo* info)
+static void PushOp (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -108,7 +108,7 @@ static void PushOp (List* ir_list, Node* node, AsmInfo* info)
     }
 }
 
-static void PushMathOp (List* ir_list, Commands op, Node* node, AsmInfo* info)
+static void PushMathOp (List* ir_list, Commands op, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -118,7 +118,7 @@ static void PushMathOp (List* ir_list, Commands op, Node* node, AsmInfo* info)
     INSERT;
 }
 
-static void PushEq (List* ir_list, Node* node, AsmInfo* info)
+static void PushEq (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -136,7 +136,7 @@ static void PushEq (List* ir_list, Node* node, AsmInfo* info)
         PopVar (ir_list, node->left->value.var, info);
 }
 
-static void PushIf (List* ir_list, Node* node, AsmInfo* info)
+static void PushIf (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -148,7 +148,7 @@ static void PushIf (List* ir_list, Node* node, AsmInfo* info)
     ++info->label_num;
 }
 
-static void PushElse (List* ir_list, Node* node, AsmInfo* info)
+static void PushElse (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -170,7 +170,7 @@ static void PushElse (List* ir_list, Node* node, AsmInfo* info)
     INSERT;
 }
 
-static void PushParam (List* ir_list, Node* node, AsmInfo* info)
+static void PushParam (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -232,7 +232,7 @@ static void PushParam (List* ir_list, Node* node, AsmInfo* info)
     RIGHT_CHILD_TO_IR;
 }
 
-static void PushRet (List* ir_list, Node* node, AsmInfo* info)
+static void PushRet (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -246,7 +246,7 @@ static void PushRet (List* ir_list, Node* node, AsmInfo* info)
     INSERT;
 }
 
-static void PushIn (List* ir_list, Node* node, AsmInfo* info)
+static void PushIn (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -254,7 +254,7 @@ static void PushIn (List* ir_list, Node* node, AsmInfo* info)
     LEFT_CHILD_TO_IR;
 }
 
-static void PushOut (List* ir_list, Node* node, AsmInfo* info)
+static void PushOut (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -262,7 +262,7 @@ static void PushOut (List* ir_list, Node* node, AsmInfo* info)
     LEFT_CHILD_TO_IR;
 }
 
-static void PushCondJump (List* ir_list, Commands jump, Node* node, AsmInfo* info)
+static void PushCondJump (List* ir_list, Commands jump, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -281,7 +281,7 @@ static void PushCondJump (List* ir_list, Commands jump, Node* node, AsmInfo* inf
     INSERT;
 }
 
-static void PushWhile (List* ir_list, Node* node, AsmInfo* info)
+static void PushWhile (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -307,7 +307,7 @@ static void PushWhile (List* ir_list, Node* node, AsmInfo* info)
     INSERT;
 }
 
-static void PushSqrt (List* ir_list, Node* node, AsmInfo* info)
+static void PushSqrt (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -317,7 +317,7 @@ static void PushSqrt (List* ir_list, Node* node, AsmInfo* info)
     INSERT;
 }
 
-static void PushCall (List* ir_list, Node* node, AsmInfo* info)
+static void PushCall (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -335,14 +335,14 @@ static void PushCall (List* ir_list, Node* node, AsmInfo* info)
     INSERT;
 }
 
-static void PushParams (List* ir_list, Node* node, AsmInfo* info)
+static void PushParams (List* ir_list, Node* node, IrInfo* info)
 {
     if (node->right) PushParams (ir_list, node->right, info);
 
     LEFT_CHILD_TO_IR;
 }
 
-static void PushNewVar (List* ir_list, Node* node, AsmInfo* info)
+static void PushNewVar (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -366,7 +366,7 @@ static void PushNewVar (List* ir_list, Node* node, AsmInfo* info)
     INSERT;
 }
 
-static void PushFunction (List* ir_list, Node* node, AsmInfo* info)
+static void PushFunction (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -379,7 +379,7 @@ static void PushFunction (List* ir_list, Node* node, AsmInfo* info)
     CHILDREN_TO_IR;
 }
 
-static void PushFuncName (List* ir_list, Node* node, AsmInfo* info)
+static void PushFuncName (List* ir_list, Node* node, IrInfo* info)
 {
     ASSERT_BASE_PARAMS;
 
@@ -400,7 +400,7 @@ static void PushNum  (List* ir_list, elem_t num)
     INSERT;
 }
 
-static void PushVar (List* ir_list, const char* var, AsmInfo* info)
+static void PushVar (List* ir_list, const char* var, IrInfo* info)
 {
     assert (ir_list);
     assert (var);
@@ -418,7 +418,7 @@ static void PushVar (List* ir_list, const char* var, AsmInfo* info)
     INSERT;
 }
 
-static void PopVar (List* ir_list, const char* var, AsmInfo* info)
+static void PopVar (List* ir_list, const char* var, IrInfo* info)
 {
     assert (ir_list);
     assert (var);

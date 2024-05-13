@@ -1,3 +1,14 @@
+if
+test "$2" == "-m"
+then
+
+cd Language
+bash run.sh $1
+cd ..
+
+exit 0
+fi
+
 cd frontend
 make
 ./front ../examples/$1.vit
