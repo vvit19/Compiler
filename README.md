@@ -6,19 +6,16 @@ This project is an implementation of a compiler from [my own language](https://g
 ```
 git clone https://github.com/vvit19/Compiler.git
 ```
-
 - Run code written on my language (file with code has to be in ```examples``` folder):
 ```
-bash run.sh filename
+chmod +x run.sh
+./run.sh filename
 ```
 - If you want to generate assembly listing file (it's path: ```examples/filename.s```):
 ```
-bash run.sh filename -S
+./run.sh filename -S
 ```
-- If you want to run code on my own SPU ([my language backend](https://github.com/vvit19/Language) generates binary file for it):
-```
-bash run.sh filename -m
-```
+
 ## Compiling process
 1) Parsing code into AST (frontend)
 2) Optimizing AST (middleend)
