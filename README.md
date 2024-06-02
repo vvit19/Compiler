@@ -62,13 +62,13 @@ There are 2 programs for tests, written in my language:
 
 | ELF file <br> CPU ticks | Out file from my language <br> CPU ticks | Boost    |
 | :---------------------: | :--------------------------------------: | :------: |
-| 461 926 802             | 52 906 517                               | 8,73     |
+|  52 906 517             |  461 926 802                             | 8,73     |
 
 2) Solving quadratic equation $x^2 + 3x + 2 = 0$ for 5000000 times ([quadratic](examples/quadratic_bench.vit)):
 
 | ELF file <br> CPU ticks | Out file from my language <br> CPU ticks | Boost    |
 | :---------------------: | :--------------------------------------: | :------: |
-| 271 504 720             | 32 926 944                               | 8,25     |
+|       32 926 944        |  271 504 720                             | 8,25     |
 
 
 It's obvious that generated ELF file is several times faster.
